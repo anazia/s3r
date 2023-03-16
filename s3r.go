@@ -13,20 +13,19 @@ import (
 )
 
 // Delete an oject
-func Delete(b string, k *string, v *string) error {
+func Delete(b string, config *aws.Config, k *string, v *string) error {
 	paramsDelete := &s3.DeleteObjectInput{
-		Bucket:    aws.String(b),
+        Bucket:    aws.String(b),
 		Key:       k,
 		VersionId: v,
 	}
 
 	// Create an EC2 service object
-	sess := session.New()
-	connect := s3.New(sess)
+	connect := s3.New(session.New(), config)
 
 	_, err := connect.DeleteObject(paramsDelete)
 	if err != nil {
-		return err
+		log.Println(err)
 	}
 
 	return nil
@@ -207,7 +206,7 @@ func main() {
 				log.Printf("Page %d: Versions:", pagesVersions)
 				log.Println()
 				for _, ver := range page.Versions {
-					Delete(bucket, ver.Key, ver.VersionId)
+					Delete(bucket, config, ver.Key, ver.VersionId)
 					log.Printf("P%d: Deleted: Key: s3://%s/%v | VersionId: %v \n", pagesVersions, bucket, aws.StringValue(ver.Key), aws.StringValue(ver.VersionId))
 				}
 
@@ -216,7 +215,7 @@ func main() {
 				log.Println()
 
 				for _, del := range page.DeleteMarkers {
-					Delete(bucket, del.Key, del.VersionId)
+					Delete(bucket, config, del.Key, del.VersionId)
 					log.Printf("P%d: Deleted: Delete Marker: s3://%s/%v | VersionId: %v \n", pagesVersions, bucket, aws.StringValue(del.Key), aws.StringValue(del.VersionId))
 				}
 
